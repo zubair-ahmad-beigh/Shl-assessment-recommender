@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
-from api import app
 
 import faiss
 import pickle
@@ -18,6 +18,15 @@ app = FastAPI(
     title="SHL Assessment Recommendation API",
     description="Intent-aware assessment recommender using FAISS",
     version="1.0"
+)
+
+# Add CORS middleware to allow frontend to communicate
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ===============================
@@ -71,6 +80,14 @@ def recommend(query: str, top_k: int):
 @app.get("/")
 def root():
     return {"message": "SHL Assessment Recommendation API is running"}
+
+@app.get("/health")
+def health():
+    """Health check endpoint for Render"""
+    return {
+        "status": "healthy",
+        "assessments_loaded": len(metadata)
+    }
 
 @app.post("/recommend", response_model=List[AssessmentResponse])
 def recommend_assessments(req: QueryRequest):
